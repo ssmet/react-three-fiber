@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import Reconciler from 'react-reconciler'
+import Reconciler from 'react-reconciler/cjs/react-reconciler.production.min.js'
+
 import { unstable_now as now, unstable_IdlePriority as idlePriority, unstable_runWithPriority as run } from 'scheduler'
 import { CanvasContext } from './canvas'
 import { version } from '../package.json'
