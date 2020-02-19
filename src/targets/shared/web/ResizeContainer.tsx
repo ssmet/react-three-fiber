@@ -17,6 +17,7 @@ export interface ResizeContainerProps extends CanvasProps, ContainerProps {
   renderer: () => Renderer | undefined | null
   effects?: (renderer: any, parent: HTMLDivElement) => () => any
   preRender?: React.ReactNode
+  size?: RectReadOnly
 }
 
 interface ResizeContainerState {
@@ -25,7 +26,7 @@ interface ResizeContainerState {
   container: HTMLDivElement
 }
 
-interface ContentProps extends ResizeContainerProps, ResizeContainerState {}
+interface ContentProps extends Omit<ResizeContainerProps, 'size'>, ResizeContainerState {}
 
 function Content({ children, setEvents, container, renderer, effects, ...props }: ContentProps) {
   // Create renderer
@@ -62,13 +63,14 @@ const ResizeContainer = React.memo(function ResizeContainer(props: ResizeContain
     onPointerMissed,
     preRender,
     resize,
+    size: sizeOverride,
     style,
     ...restSpread
   } = props
 
   const containerRef = useRef<HTMLDivElement>()
   const [events, setEvents] = useState<PointerEvents>({} as PointerEvents)
-  const [bind, size] = useMeasure(
+  const [bind, measuredSize] = useMeasure(
     resize || {
       scroll: true,
       debounce: { scroll: 50, resize: 0 },
@@ -76,9 +78,14 @@ const ResizeContainer = React.memo(function ResizeContainer(props: ResizeContain
     }
   )
 
+  const size = sizeOverride ? { ...measuredSize, ...sizeOverride } : measuredSize
+
   // Flag view ready once it's been measured out
   const readyFlag = useRef(false)
-  const ready = useMemo(() => (readyFlag.current = readyFlag.current || (!!size.width && !!size.height)), [size])
+  const ready = useMemo(
+    () => (readyFlag.current = readyFlag.current || (!!measuredSize.width && !!measuredSize.height)),
+    [measuredSize]
+  )
   const state = useMemo(() => ({ size, setEvents, container: containerRef.current as HTMLDivElement }), [size])
 
   // Allow Gatsby, Next and other server side apps to run. Will output styles to reduce flickering.
